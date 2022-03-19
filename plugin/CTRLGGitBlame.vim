@@ -7,5 +7,6 @@ if exists("g:loaded_CTRLGGitBlame")
 endif
 
 nnoremap <silent> <C-g> :<C-u>call CTRLGGitBlame#print(v:count)<Cr>
+nnoremap <silent> g<C-g> :<C-u>call CTRLGGitBlame#print('g')<Cr>
 
 let g:loaded_CTRLGGitBlame = 1

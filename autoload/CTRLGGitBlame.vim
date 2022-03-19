@@ -3,13 +3,29 @@
 " Date:         19 Mar 2022
 
 function! CTRLGGitBlame#print(extra) abort
-  let status = s:render_ctrlg(a:extra)
+  if a:extra =~ '^\d*$'
+    let status = s:render_ctrlg(a:extra)
+  elseif a:extra == 'g'
+    let status = s:render_gctrlg()
+  endif
 
   let status = status . ' ' . s:render_blame()
 
   echo status
 endfunction
 
+function! s:render_gctrlg()
+  let ret = []
+
+  " Col 5 of 65; Line 19 of 127; Word 57 of 447; Byte 400 of 3310
+  call add(ret, printf('Col %d of %d', col('.'), col('$')-1))
+  call add(ret, printf('Line %d of %d', line('.'), line('$')))
+  let counts = wordcount()
+  call add(ret, printf('Word %d of %d', counts['cursor_words'], counts['words']))
+  call add(ret, printf('Byte %d of %d', counts['cursor_bytes'], counts['bytes']))
+
+  return join(ret, '; ')
+endfunction
 
 function! s:render_ctrlg(cnt) abort
   let ret = []
