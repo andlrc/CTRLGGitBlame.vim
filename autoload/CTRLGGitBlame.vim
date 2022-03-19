@@ -1,22 +1,26 @@
 " CTRLGGitBlame - Append git blame information to the output of <C-g>
 " Maintainer:   Andreas Louv <andreas@louv.dk>
-" Date:         17 Mar 2022
+" Date:         19 Mar 2022
 
-function! CTRLGGitBlame#print() abort
-  echo s:render_statusline()
+function! CTRLGGitBlame#print(extra) abort
+  let status = s:render_ctrlg(a:extra)
+
+  let status = status . ' ' . s:render_blame()
+
+  echo status
 endfunction
 
-function! s:render_statusline() abort
 
+function! s:render_ctrlg(cnt) abort
   let ret = []
 
-  " "file.ts" [Modified][New File][readonly] line 43 of 61 --70%-- col 1
-  let name = expand('%:~:.')
-  if empty(name)
-    let name = '[No Name]'
+  " buf 1: "file.ts" [Modified][New File][readonly] line 43 of 61 --70%-- col 1
+  if a:cnt > 1
+    call add(ret, printf('buf %d:', bufnr('%')))
   endif
 
-  call add(ret, '"'. name .'"')
+  let name = a:cnt > 0 ? expand('%:p') : expand('%:~:.')
+  call add(ret, printf('"%s"', empty(name) ? '[No Name]' : name))
 
   let status = []
   if &modified
@@ -34,6 +38,12 @@ function! s:render_statusline() abort
   call add(ret, 'line '. line('.') .' of '. line('$'))
   call add(ret, '--'. (line('.')*100/line('$')) .'%--')
   call add(ret, 'col '. col('.'))
+
+  return join(ret, ' ')
+endfunction
+
+function! s:render_blame() abort
+  let ret = []
 
   " abcdef00 (Author Name 4 hours ago) summary 
   let blame = s:blame_line(expand('%'), line('.'))
