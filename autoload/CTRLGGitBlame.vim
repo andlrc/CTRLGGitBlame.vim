@@ -32,12 +32,22 @@ function! s:render_ctrlg(cnt) abort
   if &readonly
     call add(status, (&shortmess =~# '[ar]' ? '[RO]' : '[readonly]'))
   endif
-  if status->len()
-    call add(ret, status->join(''))
+  if !empty(status)
+    call add(ret, join(status, ''))
   endif
-  call add(ret, 'line '. line('.') .' of '. line('$'))
-  call add(ret, '--'. (line('.')*100/line('$')) .'%--')
-  call add(ret, 'col '. col('.'))
+
+  let percent = line('.')*100/line('$')
+  if &ruler
+    call add(ret, printf('%d lines --%d%%--',
+          \ line('$'),
+          \ percent))
+  else
+    call add(ret, printf('line %d of %d --%d%%-- col %d',
+          \ line('.'),
+          \ line('$'),
+          \ percent,
+          \ col('.')))
+  endif
 
   return join(ret, ' ')
 endfunction
