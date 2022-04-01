@@ -11,23 +11,21 @@ function! CTRLGGitBlame#print(cmd) abort
 endfunction
 
 function! s:render_blame() abort
-  let ret = []
-
-  " abcdef00 (Author Name 4 hours ago) summary 
   let blame = s:blame_line(expand('%'), line('.'))
+  if blame['sha'] == 'fatal:'
+    return ''
+  endif
+
   if blame['sha'] == '0000000000000000000000000000000000000000'
-    call add(ret, 'Not Committed Yet')
-  elseif blame['sha'] != 'fatal:'
-    let short_sha = s:get_short_sha(blame['sha'])
-    let relative_time = s:get_relative_time(blame['committer-time'], blame['committer-tz'])
+    return 'Not Committed Yet'
+  endif
 
-    call add(ret, printf('%s (%s %s) %s',
-          \ short_sha, blame['author'], relative_time, blame['summary']))
+  " abcdef00 (Author Name 4 hours ago) summary
+  let short_sha = s:get_short_sha(blame['sha'])
+  let relative_time = s:get_relative_time(blame['committer-time'], blame['committer-tz'])
 
-    let @c = short_sha
-  end
-
-  return join(ret, ' ')
+  let @c = short_sha
+  return printf('%s (%s %s) %s', short_sha, blame['author'], relative_time, blame['summary'])
 endfunction
 
 function! s:blame_line(file, line) abort
