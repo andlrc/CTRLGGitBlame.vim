@@ -1,71 +1,13 @@
 " CTRLGGitBlame - Append git blame information to the output of <C-g>
 " Maintainer:   Andreas Louv <andreas@louv.dk>
-" Date:         19 Mar 2022
+" Date:         01 Apr 2022
 
-function! CTRLGGitBlame#print(extra) abort
-  if a:extra =~ '^\d*$'
-    let status = s:render_ctrlg(a:extra)
-  elseif a:extra == 'g'
-    let status = s:render_gctrlg()
-  endif
-
+function! CTRLGGitBlame#print(cmd) abort
+  let status = execute("norm! " . a:cmd)
+  let status = substitute(status, '^\_s*', '', '')
   let status = status . ' ' . s:render_blame()
 
   echo status
-endfunction
-
-function! s:render_gctrlg()
-  let ret = []
-
-  " Col 5 of 65; Line 19 of 127; Word 57 of 447; Byte 400 of 3310
-  call add(ret, printf('Col %d of %d', col('.'), col('$')-1))
-  call add(ret, printf('Line %d of %d', line('.'), line('$')))
-  let counts = wordcount()
-  call add(ret, printf('Word %d of %d', counts['cursor_words'], counts['words']))
-  call add(ret, printf('Byte %d of %d', counts['cursor_bytes'], counts['bytes']))
-
-  return join(ret, '; ')
-endfunction
-
-function! s:render_ctrlg(cnt) abort
-  let ret = []
-
-  " buf 1: "file.ts" [Modified][New File][readonly] line 43 of 61 --70%-- col 1
-  if a:cnt > 1
-    call add(ret, printf('buf %d:', bufnr('%')))
-  endif
-
-  let name = a:cnt > 0 ? expand('%:p') : expand('%:~:.')
-  call add(ret, printf('"%s"', empty(name) ? '[No Name]' : name))
-
-  let status = []
-  if &modified
-    call add(status, (&shortmess =~# '[am]' ? '[+]' : '[Modified]'))
-  endif
-  if !empty(name) && !filereadable(name)
-    call add(status, (&shortmess =~# '[an]' ? '[New]' : '[New File]'))
-  endif
-  if &readonly
-    call add(status, (&shortmess =~# '[ar]' ? '[RO]' : '[readonly]'))
-  endif
-  if !empty(status)
-    call add(ret, join(status, ''))
-  endif
-
-  let percent = line('.')*100/line('$')
-  if &ruler
-    call add(ret, printf('%d lines --%d%%--',
-          \ line('$'),
-          \ percent))
-  else
-    call add(ret, printf('line %d of %d --%d%%-- col %d',
-          \ line('.'),
-          \ line('$'),
-          \ percent,
-          \ col('.')))
-  endif
-
-  return join(ret, ' ')
 endfunction
 
 function! s:render_blame() abort
