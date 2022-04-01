@@ -21,7 +21,7 @@ function! s:render_blame() abort
   endif
 
   " abcdef00 (Author Name 4 hours ago) summary
-  let short_sha = s:get_short_sha(blame['sha'])
+  let short_sha = s:get_short_sha(expand('%'), blame['sha'])
   let relative_time = s:get_relative_time(blame['committer-time'], blame['committer-tz'])
 
   let @c = short_sha
@@ -31,7 +31,12 @@ endfunction
 function! s:blame_line(file, line) abort
   let blame = {}
 
-  let blame_cmd = printf('git blame -L%d,%d -p %s', a:line, a:line, shellescape(a:file))
+  let blame_cmd = printf('git -C %s blame -L%d,%d -p %s',
+        \ fnamemodify(a:file, ':p:h:S'),
+        \ a:line,
+        \ a:line,
+        \ fnamemodify(a:file, ':p:S')
+        \ )
   let lines = systemlist(blame_cmd)
   let blame['sha'] = split(lines[0], ' ')[0]
   for line in lines[1:]
@@ -44,8 +49,11 @@ function! s:blame_line(file, line) abort
   return blame
 endfunction
 
-function! s:get_short_sha(ref)
-    let cmd = printf('git rev-parse --short %s', shellescape(a:ref))
+function! s:get_short_sha(file, ref)
+    let cmd = printf('git -C %s rev-parse --short %s',
+          \ fnamemodify(a:file, ':p:h:S'),
+          \ shellescape(a:ref)
+          \ )
     let short_sha = systemlist(cmd)[0]
     return short_sha
 endfunction
